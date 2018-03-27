@@ -3,14 +3,19 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/prometheus/client_golang/prometheus"
 )
+
+var db = NewDB()
 
 func main() {
 	prometheus.MustRegister(newEvents)
 	prometheus.MustRegister(requestedEvents)
-	events = append(events, Event{ID: 1, Name: "Meetup"})
+
 	router := NewRouter()
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":"+os.Getenv("PORT"), router))
+
 }

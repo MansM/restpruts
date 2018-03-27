@@ -3,8 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
-	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -18,47 +17,44 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 // GetEvents List all events
 func GetEvents(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	json.NewEncoder(w).Encode(events)
+
+	var events []Event
+	if err := db.Find(&events).Error; err != nil {
+		log.Fatal("error connecting to the database: ", err)
+	} else {
+		json.NewEncoder(w).Encode(events)
+	}
 }
 
 // GetEvent Display just one event
 func GetEvent(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
+	var event Event
 
-	for _, item := range events {
-
-		if i, err := strconv.Atoi(params["id"]); err == nil {
-
-			if i == item.ID {
-				w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-				json.NewEncoder(w).Encode(item)
-				return
-			}
-		}
+	if i, err := strconv.Atoi(params["id"]); err == nil {
+		db.Where("id = ?", i).First(&event)
 	}
 	requestedEvents.Inc()
-	json.NewEncoder(w).Encode(&Event{})
+	json.NewEncoder(w).Encode(event)
 }
 
 // CreateEvent blah
 func CreateEvent(w http.ResponseWriter, r *http.Request) {
-	var eventn Event
-	body, err := ioutil.ReadAll(io.LimitReader(r.Body, 1048576))
-	if err != nil {
-		panic(err)
-	}
-	if err := r.Body.Close(); err != nil {
-		panic(err)
-	}
-	if err := json.Unmarshal(body, &eventn); err != nil {
-		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	var event Event
+
+	if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
+		log.Panic("error in input:", err)
 		w.WriteHeader(422) // unprocessable entity
-		if err := json.NewEncoder(w).Encode(err); err != nil {
-			panic(err)
-		}
+		return
 	}
-	events = append(events, Event{ID: eventn.ID, Name: eventn.Name})
+
+	if err := db.Create(&event).Error; err != nil {
+		log.Panic("error writing to db:", err)
+		w.WriteHeader(500) // unprocessable entity
+	} else {
+		json.NewEncoder(w).Encode(event)
+	}
+
 	newEvents.Inc()
 }
 

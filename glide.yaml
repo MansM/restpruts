@@ -1,0 +1,18 @@
+package: github.com/mansm/restpruts
+import:
+- package: github.com/gorilla/mux
+  version: ^1.6.1
+- package: github.com/jinzhu/gorm
+  version: ^1.9.1
+  subpackages:
+  - dialects/postgres
+- package: github.com/prometheus/client_golang
+  version: ^0.9.0-pre1
+  subpackages:
+  - prometheus
+  - prometheus/promhttp
+testImport:
+- package: github.com/stretchr/testify
+  version: ^1.2.1
+  subpackages:
+  - assert

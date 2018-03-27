@@ -1,0 +1,29 @@
+version: "3"
+services:
+  golang:
+    image: golang:1.10
+    volumes:
+      - ./src/github.com:/go/src/github.com
+    command: tail -f /var/log/dpkg.log
+    ports:
+      - 8081:8081
+    environment:
+      PORT: 8081
+
+  db:
+    image: cockroachdb/cockroach:v1.1.7
+    volumes:
+      - ./data/events-db:/cockroach/cockroach-data
+    environment:
+      COCKROACH_INSECURE: "true"
+    ports:
+      - 26257:26257
+      - 8080:8080
+    command: start --insecure
+
+  gobuild:
+    build:
+      context: src/github.com/mansm/restpruts/
+      args:
+        https_proxy: "http://10.0.1.22:3128"
+

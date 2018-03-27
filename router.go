@@ -7,6 +7,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+// type Router struct {
+// 	db *gorm.DB
+// }
+
 // NewRouter blah
 func NewRouter() *mux.Router {
 
